@@ -30,7 +30,7 @@ export class GameGateway {
     if (!this.rooms[roomId]) {
       this.rooms[roomId] = { participants: {}, chat: [], votes: {} };
     }
-    this.rooms[roomId].participants[user] = 'not-voted';
+    this.rooms[roomId].participants[user] = 'no ha votado';
     this.server.to(roomId).emit('updateParticipants', this.rooms[roomId]);
     this.server.socketsJoin(roomId);
     console.log(`User ${user} joined room ${roomId}`);
@@ -46,10 +46,10 @@ export class GameGateway {
     const { roomId, user, vote } = data;
     if (this.rooms[roomId]) {
       this.rooms[roomId].votes[user] = vote;
-      this.rooms[roomId].participants[user] = 'voted';
+      this.rooms[roomId].participants[user] = 'Ha votado';
       this.server.to(roomId).emit('updateParticipants', this.rooms[roomId]);
       this.server.to(roomId).emit('updateVotes', this.rooms[roomId].votes);
-      console.log(`User ${user} voted ${vote} in room ${roomId}`);
+      console.log(`User ${user} Ha votado ${vote} in room ${roomId}`);
     }
     return { success: true };
   }
@@ -61,7 +61,7 @@ export class GameGateway {
     if (this.rooms[roomId]) {
       this.rooms[roomId].votes = {};
       for (const user in this.rooms[roomId].participants) {
-        this.rooms[roomId].participants[user] = 'not-voted';
+        this.rooms[roomId].participants[user] = 'No ha votado';
       }
       this.server.to(roomId).emit('updateParticipants', this.rooms[roomId]);
       this.server.to(roomId).emit('updateVotes', {});
