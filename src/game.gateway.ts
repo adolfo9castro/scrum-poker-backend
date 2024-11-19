@@ -25,18 +25,28 @@ export class GameGateway {
 
   // Unirse a una sala
   @SubscribeMessage('joinRoom')
-  handleJoinRoom(@MessageBody() data: { roomId: string; user: string }) {
+  async handleJoinRoom(@MessageBody() data: { roomId: string; user: string }) {
     const { roomId, user } = data;
+  
+    // Si la sala no existe, la crea
     if (!this.rooms[roomId]) {
       this.rooms[roomId] = { participants: {}, chat: [], votes: {} };
     }
+  
+    // Añadir al participante a la lista de participantes de la sala
     this.rooms[roomId].participants[user] = 'no ha votado';
-    this.server.to(roomId).emit('updateParticipants', this.rooms[roomId]);
+  
+    // Unir al cliente a la sala
     this.server.socketsJoin(roomId);
+  
     console.log(`User ${user} joined room ${roomId}`);
   
-    // Enviar el historial del chat a todos los usuarios actuales de la sala
-    this.server.to(roomId).emit('updateChat', this.rooms[roomId].chat);
+    // Esperar un pequeño retraso para asegurar que el cliente esté unido a la sala antes de emitir el evento
+    setTimeout(() => {
+      // Emitir la actualización de los participantes después de que el cliente se haya unido a la sala
+      this.server.to(roomId).emit('updateParticipants', { participants: this.rooms[roomId].participants });
+    }, 50);
+  
     return { success: true };
   }
 
